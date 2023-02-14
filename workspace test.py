@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial.transform import Rotation   
 
 
 # Plot the workspace
@@ -36,28 +37,28 @@ slider_xx = Slider(ax_xx, 'XX', -125, 125, valinit=0, valstep=1)
 slider_yy = Slider(ax_yy, 'YY', -200, 200, valinit=0, valstep=1)
 
 # Initialise the dots
-dot0 = ax.scatter([0], [0], [0], color='g')
-dot1 = ax.scatter([0], [0], [0], color='b')
-dot2 = ax.scatter([0], [0], [0], color='b')
-dot3 = ax.scatter([0], [0], [0], color='b', marker='*')
-dot4 = ax.scatter([0], [0], [0], color='b')
-dot5 = ax.scatter([0], [0], [0], color='b')
-dot6 = ax.scatter([0], [0], [0], color='r')
+dot0 = ax.scatter([0], [0], [0], color='g', marker='X')
+dot1 = ax.scatter([0], [0], [0], color='b', marker='s')
+dot2 = ax.scatter([0], [0], [0], color='b', marker='s')
+dot3 = ax.scatter([0], [0], [0], color='b', marker='o')
+dot4 = ax.scatter([0], [0], [0], color='b', marker='s')
+dot5 = ax.scatter([0], [0], [0], color='b', marker='o')
+dot6 = ax.scatter([0], [0], [0], color='r', marker='.')
 
 # Initialise the surface
 X = np.arange(0, 1, 0.1)
 Y = np.arange(0, 1, 0.1)
 X, Y = np.meshgrid(X, Y)
 Z = np.zeros_like(X)
-surf = ax.plot_surface(X, Y, Z, alpha=0, visible=False)
+surf = ax.plot_surface(X, Y, Z, visible=False)
 
 # Define the relative stage geometries
 p = np.array([[0,50,0],
               [0,50,0],
               [0,50,0],
-              [-200,300,0],
+              [-300,300,0],
               [50,0,0],
-              [150,0,0]])
+              [250,0,0]])
 
 # Define the update function
 def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
@@ -133,13 +134,25 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
 
 
     # Print the position of dots in integer values
-    print('X: ', int(T01[0][3]), 'Y: ', int(T01[1][3]), 'Z: ', int(T01[2][3]))
-    print('X: ', int(T02[0][3]), 'Y: ', int(T02[1][3]), 'Z: ', int(T02[2][3]))
-    print('X: ', int(T03[0][3]), 'Y: ', int(T03[1][3]), 'Z: ', int(T03[2][3]))
-    print('X: ', int(T04[0][3]), 'Y: ', int(T04[1][3]), 'Z: ', int(T04[2][3]))
-    print('X: ', int(T05[0][3]), 'Y: ', int(T05[1][3]), 'Z: ', int(T05[2][3]))
-    print('X: ', int(T06[0][3]), 'Y: ', int(T06[1][3]), 'Z: ', int(T06[2][3]))
-    print('\n')
+    # print('X: ', int(T01[0][3]), 'Y: ', int(T01[1][3]), 'Z: ', int(T01[2][3]))
+    # print('X: ', int(T02[0][3]), 'Y: ', int(T02[1][3]), 'Z: ', int(T02[2][3]))
+    # print('X: ', int(T03[0][3]), 'Y: ', int(T03[1][3]), 'Z: ', int(T03[2][3]))
+    # print('X: ', int(T04[0][3]), 'Y: ', int(T04[1][3]), 'Z: ', int(T04[2][3]))
+    # print('X: ', int(T05[0][3]), 'Y: ', int(T05[1][3]), 'Z: ', int(T05[2][3]))
+    # print('X: ', int(T06[0][3]), 'Y: ', int(T06[1][3]), 'Z: ', int(T06[2][3]))
+    # print('\n')
+
+    # print T0T in integer values
+    # print([np.round(T06[0][0],2),np.round(T06[0][1],2),np.round(T06[0][2],2),np.round(T06[0][3],2)])
+    # print([np.round(T06[1][0],2),np.round(T06[1][1],2),np.round(T06[1][2],2),np.round(T06[1][3],2)])
+    # print([np.round(T06[2][0],2),np.round(T06[2][1],2),np.round(T06[2][2],2),np.round(T06[2][3],2)])
+    # print([np.round(T06[3][0],2),np.round(T06[3][1],2),np.round(T06[3][2],2),np.round(T06[3][3],2)])
+
+
+    # Calculate the angles of the target centroid
+    R6 =  Rotation.from_matrix(T06[:3,:3])
+    angles = R6.as_euler("xyz",degrees=True)
+    print(np.round(angles,2))
 
     # Set the position of dots
     dot1._offsets3d = ([T01[0][3]],[T01[1][3]],[T01[2][3]])
@@ -152,7 +165,7 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
     # Plot the target plane
     global surf
     surf.remove()
-    surf = ax.plot_surface(TS[:,:,0], TS[:,:,1], TS[:,:,2], color='b', alpha=0.2)
+    surf = ax.plot_surface(TS[:,:,0], TS[:,:,1], TS[:,:,2], color='r', alpha=0.2)
     
     fig.canvas.draw_idle()
 
@@ -170,5 +183,3 @@ slider_xx.on_changed(update)
 slider_yy.on_changed(update)
 
 plt.show()
-
-
