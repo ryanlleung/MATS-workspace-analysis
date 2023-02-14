@@ -1,8 +1,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, Button
 from mpl_toolkits import mplot3d
+from mpl_toolkits.mplot3d import Axes3D
 
 
 # Plot the workspace
@@ -43,6 +44,12 @@ dot4 = ax.scatter([0], [0], [0], color='b')
 dot5 = ax.scatter([0], [0], [0], color='b')
 dot6 = ax.scatter([0], [0], [0], color='r')
 
+# Initialise the surface
+X = np.arange(0, 1, 0.1)
+Y = np.arange(0, 1, 0.1)
+X, Y = np.meshgrid(X, Y)
+Z = np.zeros_like(X)
+surf = ax.plot_surface(X, Y, Z, alpha=0, visible=False)
 
 # Define the relative stage geometries
 p = np.array([[0,50,0],
@@ -108,6 +115,23 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
     T05 = np.dot(T04,T45)
     T06 = np.dot(T05,T56)
 
+    # Define target plane
+    density = 2
+    Tx = np.linspace(-125,125,density)
+    Ty = np.linspace(-125,125,density)
+    TS = np.zeros((density,density,3))
+
+    for i in range(0,density):
+        for j in range(0,density):
+            T6T = np.array([[1,0,0,Tx[i]],
+                            [0,1,0,Ty[j]],
+                            [0,0,1,0],
+                            [0,0,0,1]])
+            T0T = np.dot(T06,T6T)
+            for k in range(0,3):
+                TS[i][j][k] = T0T[k][3]
+
+
     # Print the position of dots in integer values
     print('X: ', int(T01[0][3]), 'Y: ', int(T01[1][3]), 'Z: ', int(T01[2][3]))
     print('X: ', int(T02[0][3]), 'Y: ', int(T02[1][3]), 'Z: ', int(T02[2][3]))
@@ -115,7 +139,6 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
     print('X: ', int(T04[0][3]), 'Y: ', int(T04[1][3]), 'Z: ', int(T04[2][3]))
     print('X: ', int(T05[0][3]), 'Y: ', int(T05[1][3]), 'Z: ', int(T05[2][3]))
     print('X: ', int(T06[0][3]), 'Y: ', int(T06[1][3]), 'Z: ', int(T06[2][3]))
-    
     print('\n')
 
     # Set the position of dots
@@ -125,11 +148,19 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
     dot4._offsets3d = ([T04[0][3]],[T04[1][3]],[T04[2][3]])
     dot5._offsets3d = ([T05[0][3]],[T05[1][3]],[T05[2][3]])
     dot6._offsets3d = ([T06[0][3]],[T06[1][3]],[T06[2][3]])
+
+    # Plot the target plane
+    global surf
+    surf.remove()
+    surf = ax.plot_surface(TS[:,:,0], TS[:,:,1], TS[:,:,2], color='b', alpha=0.2)
     
     fig.canvas.draw_idle()
 
-update()
+    return
 
+
+# Call the update function when sliders are changed
+update() # Initialise the plot
 slider_x.on_changed(update)
 slider_y.on_changed(update)
 slider_z.on_changed(update)
