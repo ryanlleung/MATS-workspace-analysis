@@ -2,6 +2,67 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+## Geometries are Z-up ##
+
+# Class to plot a 3D linear stage
+class LinearStage:
+    
+    # Initialize the stage
+    def __init__(self, ax, dims=[400,50,50], pose=[0,0,0,0,0,0], S=0, color=0, alpha=0.25):
+        self.ax = ax
+        self.l, self.w, self.h = dims
+        self.cx, self.cy, self.cz, self.rx, self.ry, self.rz = pose
+        self.base_pose = pose
+        self.S = S
+        self.color = color
+        self.alpha = alpha
+        self.thickness = 15
+
+        self.rx = np.deg2rad(self.rx)
+        self.ry = np.deg2rad(self.ry)
+        self.rz = np.deg2rad(self.rz)
+
+    # Function to plot the stage
+    def plot(self):
+
+        # Plot the base      
+        self.base_height = self.h - self.thickness  
+        plot_cuboid(self.ax, self.l, self.w, self.base_height, self.base_pose, self.color, self.alpha)
+
+        # Transform the base pose to the platform pose
+        Tbp = np.array([
+            [1,0,0,self.S],
+            [0,1,0,0],
+            [0,0,1,self.base_height],
+            [0,0,0,1]
+        ])
+        
+        # Define base pose in matrix form
+        print(self.rx, self.ry, self.rz)
+        T0b = np.array([[np.cos(self.ry)*np.cos(self.rz), -np.cos(self.ry)*np.sin(self.rz), np.sin(self.ry), self.cx],
+                        [np.cos(self.rx)*np.sin(self.rz) + np.cos(self.rz)*np.sin(self.rx)*np.sin(self.ry), np.cos(self.rx)*np.cos(self.rz) - np.sin(self.rx)*np.sin(self.ry)*np.sin(self.rz), -np.cos(self.ry)*np.sin(self.rx), self.cy],
+                        [np.sin(self.rx)*np.sin(self.rz) - np.cos(self.rx)*np.cos(self.rz)*np.sin(self.ry), np.cos(self.rz)*np.sin(self.rx) + np.cos(self.rx)*np.sin(self.ry)*np.sin(self.rz), np.cos(self.rx)*np.cos(self.ry), self.cz],
+                        [0,0,0,1]])
+        
+        # Calculate the platform pose
+        T0p = np.dot(T0b, Tbp)
+
+        # Convert the platform pose to a list
+        self.rx = np.rad2deg(np.arctan2(T0p[2,1], T0p[2,2]))
+        self.ry = np.rad2deg(np.arctan2(-T0p[2,0], np.sqrt(T0p[2,1]**2 + T0p[2,2]**2)))
+        self.rz = np.rad2deg(np.arctan2(T0p[1,0], T0p[0,0]))
+        self.plat_pose = [T0p[0,3], T0p[1,3], T0p[2,3], self.rx, self.ry, self.rz]
+        print(self.plat_pose)
+        print('-----------------')
+
+        # Plot the platform
+        plat_l = plat_w = self.w - 5
+        plot_cuboid(self.ax, plat_l, plat_w, self.thickness, self.plat_pose, self.color, self.alpha)
+
+
+
+
+# Function to plot a cuboid with origin at centroid of bottom face
 def plot_cuboid(ax, l, w, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
     
     # Process the arguments
@@ -50,6 +111,7 @@ def plot_cuboid(ax, l, w, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
     return
 
 
+# Function to plot a cylinder with origin at centroid of bottom face
 def plot_cylinder(ax, r, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
     
     # Process the arguments
@@ -126,7 +188,15 @@ ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 
-plot_cuboid(ax, 300, 75, 50, [0, 0, 0, 0, 0, 0], color=0)
-plot_cylinder(ax, 25, 25, [0, 0, 50, 0, 45, 0], color=0)
+# plot_cuboid(ax, 300, 75, 50, [0, 0, 0, 0, 0, 0], color=0)
+# plot_cylinder(ax, 25, 25, [0, 0, 50, 0, 45, 0], color=0)
 
+# X_stage = LinearStage(ax, dims=[400,50,50], pose=[0,0,0,0,45,0], S=0, color=0)
+# X_stage.plot()
+
+for i in range(0,90,10):
+    X_stage = LinearStage(ax, dims=[400,50,50], pose=[-50,20*i,0,45,i,0], S=50, color=i)
+    X_stage.plot()
+    # plot_cuboid(ax, 400, 50, 50, [-50,20*i,0,0,i,0], color=i//10)
 plt.show()
+
