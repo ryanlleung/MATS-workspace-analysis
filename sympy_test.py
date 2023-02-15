@@ -49,10 +49,10 @@ T56 = sympy.Matrix([[1, 0, 0, p[5][0]],
 
 
 # Set target point coordinates relative to target centroid
-px = 0
-py = 125
-T6T = sympy.Matrix([[1, 0, 0, px],
-                    [0, 1, 0, py],
+TPx = 0
+TPy = 125
+T6T = sympy.Matrix([[1, 0, 0, TPx],
+                    [0, 1, 0, TPy],
                     [0, 0, 1, 0],
                     [0, 0, 0, 1]])
 

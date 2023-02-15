@@ -7,6 +7,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.transform import Rotation   
 
 
+# XX, YY represents a variable target centroid position
+# Should be named something else like ptx, pty to avoid confusion
+# with the target point coordinates
+
+
 # Plot the workspace
 fig = plt.figure()
 ax = plt.axes(projection='3d')
