@@ -1,7 +1,9 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from scipy.spatial.transform import Rotation   
+
+from scipy.spatial.transform import Rotation
 
 ## Geometries are Z-up ##
 
@@ -9,31 +11,46 @@ from scipy.spatial.transform import Rotation
 class LinearStage:
     
     # Initialize the stage
-    def __init__(self, ax, dims=[400,50,50], pose=[0,0,0,0,0,0], S=0, color=0, alpha=0.25):
+    def __init__(self, ax, dims=[400,50,50], thickness=None, color=0, alpha=0.25):
         self.ax = ax
         self.l, self.w, self.h = dims
-        self.cx, self.cy, self.cz, self.rx, self.ry, self.rz = pose
-        self.base_pose = pose
-        self.S = S
         self.color = color
         self.alpha = alpha
-        self.thickness = 10
 
+        self.thickness = thickness
+        if thickness == None: self.thickness = self.h/6
+            
         self.plot_called = False
 
+        return
+        
+    # Function to plot the stage
+    def plot(self, S=None, pose=None):
+        
+        # Check if last S and pose are defined
+        if not hasattr(self, 'last_S'):
+            self.last_S = 0
+        if not hasattr(self, 'last_pose'):
+            self.last_pose = [0,0,0,0,0,0]
+
+        # If no S is given, use the last S
+        if S == None:
+            S = self.last_S
+        # If no pose is given, use the last pose
+        if pose == None:
+            pose = self.last_pose
+        
+        # Unpack the pose
+        self.cx, self.cy, self.cz, self.rx, self.ry, self.rz = pose
+        
         # The rotation is inverted
         self.rx = -np.deg2rad(self.rx)
         self.ry = -np.deg2rad(self.ry)
         self.rz = -np.deg2rad(self.rz)
 
-        return
-        
-    # Function to plot the stage
-    def plot(self, S=0):
-        
         # Plot base
         self.base_height = self.h - self.thickness
-        self.base = plot_cuboid(self.ax, self.l, self.w, self.base_height, pose=self.base_pose, color=self.color, alpha=self.alpha)
+        self.base = plot_cuboid(self.ax, self.l, self.w, self.base_height, pose=pose, color=self.color, alpha=self.alpha)
         self.base_dot = plot_dot(self.ax, position=[self.cx, self.cy, self.cz], color='g')
 
         # Convert base to Euler angles and to transformation matrix rotating in xyz
@@ -55,20 +72,23 @@ class LinearStage:
 
         # Plot the platform
         plat_width = plat_length = self.w - 10
-        R6 =  Rotation.from_matrix(T0p[:3,:3])
-        plat_angles = R6.as_euler("xyz",degrees=True)
+        R =  Rotation.from_matrix(T0p[:3,:3])
+        plat_angles = R.as_euler("xyz",degrees=True)
         # The rotation is inverted
         self.platform_pose = [T0p[0,3], T0p[1,3], T0p[2,3], -plat_angles[0], -plat_angles[1], -plat_angles[2]]
 
         self.plat = plot_cuboid(self.ax, plat_length, plat_width, self.thickness, pose=self.platform_pose, color=self.color, alpha=.5)
         self.plat_dot = plot_dot(self.ax, position=[T0p[0,3], T0p[1,3], T0p[2,3]], color=self.color)
 
+        # Set flags
         self.plot_called = True
+        self.last_pose = pose
+        self.last_S = S
 
         return
     
     # Function to update the stage platform position
-    def moveTo(self,S=0):
+    def movePlatform(self,S=0):
         
         # Run the plot function if it hasn't been called yet
         if not self.plot_called: self.plot(S=S)
@@ -78,7 +98,139 @@ class LinearStage:
         self.plat.remove()
         self.plat_dot.remove()
 
+        self.S = S
         self.plot(S=S)
+
+        return
+    
+    # Function to update the stage base position
+    def moveBase(self,pose=[0,0,0,0,0,0]):
+
+        # Run the plot function if it hasn't been called yet
+        if not self.plot_called: self.plot(pose=pose)
+
+        self.base.remove()
+        self.base_dot.remove()
+        self.plat.remove()
+        self.plat_dot.remove()
+
+        self.plot(pose=pose)
+
+        return
+    
+
+# Class to plot a 3D rotary stage
+class RotaryStage:
+        
+    # Initialize the stage
+    def __init__(self, ax, dims=[400,50,50], thickness=None, color=0, alpha=0.25):
+        
+        self.ax = ax
+        self.l, self.w, self.h = dims
+        self.color = color
+        self.alpha = alpha
+        
+        self.thickness = thickness
+        if thickness == None: self.thickness = self.h/6
+
+        self.plot_called = False
+
+        return
+    
+        
+    # Function to plot the stage
+    def plot(self, S=None, pose=None):
+        
+        # Check if last S and pose are defined
+        if not hasattr(self, 'last_S'):
+            self.last_S = 0
+        if not hasattr(self, 'last_pose'):
+            self.last_pose = [0,0,0,0,0,0]
+
+        # If no S is given, use the last S
+        if S == None:
+            S = self.last_S
+        # If no pose is given, use the last pose
+        if pose == None:
+            pose = self.last_pose
+        
+        # Unpack the pose
+        self.cx, self.cy, self.cz, self.rx, self.ry, self.rz = pose
+        
+        # The rotation is inverted
+        self.rx = -np.deg2rad(self.rx)
+        self.ry = -np.deg2rad(self.ry)
+        self.rz = -np.deg2rad(self.rz)
+
+        # Plot base
+        self.base_height = self.h - self.thickness
+        self.base = plot_cuboid(self.ax, self.l, self.w, self.base_height, pose=pose, color=self.color, alpha=self.alpha)
+        self.base_dot = plot_dot(self.ax, position=[self.cx, self.cy, self.cz], color='g')
+
+        # Convert base to Euler angles and to transformation matrix rotating in xyz
+        T0b = np.array([
+            [np.cos(self.rz)*np.cos(self.ry), np.cos(self.rz)*np.sin(self.ry)*np.sin(self.rx)-np.sin(self.rz)*np.cos(self.rx), np.cos(self.rz)*np.sin(self.ry)*np.cos(self.rx)+np.sin(self.rz)*np.sin(self.rx), self.cx],
+            [np.sin(self.rz)*np.cos(self.ry), np.sin(self.rz)*np.sin(self.ry)*np.sin(self.rx)+np.cos(self.rz)*np.cos(self.rx), np.sin(self.rz)*np.sin(self.ry)*np.cos(self.rx)-np.cos(self.rz)*np.sin(self.rx), self.cy],
+            [-np.sin(self.ry), np.cos(self.ry)*np.sin(self.rx), np.cos(self.ry)*np.cos(self.rx), self.cz],
+            [0,0,0,1]
+        ])
+
+        Tbp = np.array([
+            [np.cos(S), -np.sin(S), 0, 0],
+            [np.sin(S), np.cos(S), 0, 0],
+            [0,0,1,self.base_height],
+            [0,0,0,1]
+        ])
+
+        T0p = np.dot(T0b, Tbp)
+
+        # Plot the platform
+        plat_r = (self.w - 2.5)/2
+        R =  Rotation.from_matrix(T0p[:3,:3])
+        plat_angles = R.as_euler("xyz",degrees=True)
+        # The rotation is inverted
+        self.platform_pose = [T0p[0,3], T0p[1,3], T0p[2,3], -plat_angles[0], -plat_angles[1], -plat_angles[2]]
+
+        self.plat0, self.plat1 = plot_cylinder(self.ax, plat_r, self.thickness, pose=self.platform_pose, color=self.color, alpha=.5)
+        self.plat_dot = plot_dot(self.ax, position=[T0p[0,3], T0p[1,3], T0p[2,3]], color=self.color)
+
+        # Set flags
+        self.plot_called = True
+        self.last_pose = pose
+        self.last_S = S
+
+        return
+    
+    # Function to update the stage platform position
+    def movePlatform(self,S=0):
+        
+        # Run the plot function if it hasn't been called yet
+        if not self.plot_called: self.plot(S=S)
+
+        self.base.remove()
+        self.base_dot.remove()
+        self.plat0.remove()
+        self.plat1.remove()
+        self.plat_dot.remove()
+
+        self.S = S
+        self.plot(S=S)
+
+        return
+    
+    # Function to update the stage base position
+    def moveBase(self,pose=[0,0,0,0,0,0]):
+
+        # Run the plot function if it hasn't been called yet
+        if not self.plot_called: self.plot(pose=pose)
+
+        self.base.remove()
+        self.base_dot.remove()
+        self.plat0.remove()
+        self.plat1.remove()
+        self.plat_dot.remove()
+
+        self.plot(pose=pose)
 
         return
     
@@ -142,8 +294,8 @@ def plot_cuboid(ax, l, w, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
     ]
 
     # Create a Poly3DCollection with a solid face color and a wireframe
-    collection = Poly3DCollection(faces, alpha=alpha, facecolor=color, edgecolor=color)
-    collection.set_linewidth(2)
+    collection = Poly3DCollection(faces, alpha=alpha, facecolor=color, edgecolor='black')
+    collection.set_linewidth(0.5)
     cuboid = ax.add_collection3d(collection)
 
     return cuboid
@@ -203,14 +355,14 @@ def plot_cylinder(ax, r, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
 
     # Create a Poly3DCollection with a solid face color for side faces
     collection = Poly3DCollection(faces, alpha=alpha, facecolor=color)
-    ax.add_collection3d(collection)
+    cylinside = ax.add_collection3d(collection)
 
     # Add the top and bottom faces with wireframe
-    collection = Poly3DCollection(faces_tb, alpha=alpha, facecolor=color, edgecolor=color)
-    collection.set_linewidth(2)
+    collection = Poly3DCollection(faces_tb, alpha=alpha, facecolor=color, edgecolor='black')
+    collection.set_linewidth(0.5)
     cylinder = ax.add_collection3d(collection)
 
-    return cylinder
+    return cylinder, cylinside
 
 
 #### Create the figure object ####
@@ -243,13 +395,22 @@ ax.set_zlabel('Z')
 # plot_cuboid(ax, 300, 75, 50, [0, 0, 0, 0, 0, 0], color=0)
 # plot_cylinder(ax, 25, 25, [0, 0, 50, 0, 45, 0], color=0)
 
-X_stage = LinearStage(ax, dims=[400,50,40], pose=[0,0,0,0,0,0], S=-150, color=0)
+X_stage = LinearStage(ax, dims=[400,50,30], color=0)
 X_stage.plot()
-# X_stage.update(50)
-# plt.show()
+
+Rx_stage = RotaryStage(ax, dims=[50,50,30], color=1)
+Rx_stage.plot()
+
+# for i in range(-150,150,10):
+#     print(i)
+#     X_stage.movePlatform(i)
+#     plt.pause(.1)
 
 for i in range(-150,150,10):
     print(i)
-    X_stage.moveTo(i)
+    X_stage.moveBase([i,0,0,0,0,0])
+    Rx_stage.moveBase([i,0,30,0,0,0])
     plt.pause(.1)
+
+plt.show()
 
