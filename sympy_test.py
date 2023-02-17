@@ -59,7 +59,7 @@ T6T = sympy.Matrix([[1, 0, 0, TPx],
 
 # Set target point coordinates relative to space frame
 
-Tx, Ty, Tz, Trx, Try = 0, 0, 0, 0, 0
+Tx, Ty, Tz, Trx, Try = 0, 450, 0, 0, 0
 
 R = Rotation.from_euler('xyz', [Trx, Try, 0], degrees=True)
 T = sympy.Matrix([[R.as_matrix()[0][0], R.as_matrix()[0][1], R.as_matrix()[0][2], Tx],

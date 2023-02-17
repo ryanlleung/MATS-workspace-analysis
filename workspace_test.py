@@ -137,6 +137,8 @@ def update(X=0,Y=0,Z=0,Rx=0,Ry=0,XX=0,YY=0):
             for k in range(0,3):
                 TS[i][j][k] = T0T[k][3]
 
+    print(TS.shape)
+
 
     # Print the position of dots in integer values
     # print('X: ', int(T01[0][3]), 'Y: ', int(T01[1][3]), 'Z: ', int(T01[2][3]))
