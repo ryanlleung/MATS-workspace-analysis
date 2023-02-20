@@ -110,7 +110,7 @@ def get_target_plane(X=0, Y=0, Z=0, Rx=0, Ry=0, width=250, height=250, density=2
 # Function to use inverse kinematics to calculate the stage positions
 # TSx, TSy, TSz, TSrx, TSry = target centroid coordinates in the ground frame
 # TPx, TPy = target point coordinates in the target plane frame
-def get_stage_positions(target_pose, target_point):
+def get_stage_positions(target_setpoint, target_point):
 
     # Function to calculate the error between the current position and the setpoint
     def error_function(q, TSx=0, TSy=0, TSz=0, TSrx=0, TSry=0, TPx=0, TPy=0):
@@ -128,7 +128,7 @@ def get_stage_positions(target_pose, target_point):
                           angles_guess[1]-TSry])
         return error
 
-    TSx, TSy, TSz, TSrx, TSry = target_pose
+    TSx, TSy, TSz, TSrx, TSry = target_setpoint
     TPx, TPy = target_point
 
     q_solution = fsolve(error_function, [0,0,0,0,0],

@@ -65,14 +65,18 @@ surf = ax.plot_surface(X, Y, Z, visible=False)
 
 
 # Update the plot when the sliders are changed
-def update(setpoint='0, 450, 0, 0, 0', TPx=0, TPy=0):
+def update(setpoint='0, 450, 0, 0, 0', TPx=0, TPy=0, demo=False):
 
-    # Get values from sliders
-    TPx = slider_x.val
-    TPy = slider_y.val
+    if not demo:
+        # Get values from sliders
+        TPx = slider_x.val
+        TPy = slider_y.val
 
-    # Get values from textboxes
-    setpoint = np.array([float(x) for x in ax_setpointTB.text.split(',')])
+        # Get values from textboxes
+        setpoint = np.array([float(x) for x in ax_setpointTB.text.split(',')])
+    else:
+        ax_setpointTB.set_val(setpoint)
+        setpoint = np.array([float(x) for x in setpoint.split(',')])
 
     # Get the transformation matrix
     stage_pos = get_stage_positions(setpoint, [TPx,TPy])
@@ -111,13 +115,7 @@ def update(setpoint='0, 450, 0, 0, 0', TPx=0, TPy=0):
     return
 
 
-# Call the update function when sliders are changed
-update() # Initialise the plot
-slider_x.on_changed(update)
-slider_y.on_changed(update)
-ax_setpointTB.on_submit(update)
-
-# Function to reset the plot
+# Function to reset the plot view and values
 def reset(event):
     ax.view_init(elev=30,azim=-70)
     slider_x.reset()
@@ -128,193 +126,28 @@ reset_button_ax = fig.add_axes([0.8, 0.15, 0.1, 0.05])
 reset_button = Button(reset_button_ax, 'Reset')
 reset_button.on_clicked(reset)
 
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Plot the workspace
-# fig = plt.figure()
-# ax = plt.axes(projection='3d')
-# ax.view_init(elev=0,azim=-90)
-
-# # Set the limits of the plot
-# xlim = np.array([-500, 500])
-# ylim = np.array([0, 800])
-# zlim = np.array([-100, 100])
-
-# ax.set_xlim(xlim)
-# ax.set_ylim(ylim)
-# ax.set_zlim(zlim)
-# lims = np.array([xlim, ylim, zlim])
-# min_value = np.min(lims)
-# max_value = np.max(lims)
-# norm_lims = (lims - min_value) / (max_value - min_value)
-# ax.set_box_aspect(np.diff(norm_lims, axis=1).flatten())
-
-# ax.set_xlabel('X')
-# ax.set_ylabel('Y')
-# ax.set_zlabel('Z')
-
-
-# # Add sliders
-# ax_x = plt.axes([0.25, 0.05, 0.65, 0.03])
-# ax_y = plt.axes([0.25, 0.1, 0.65, 0.03])
-# ax_z = plt.axes([0.25, 0.15, 0.65, 0.03])
-# ax_rx = plt.axes([0.25, 0.2, 0.65, 0.03])
-# ax_ry = plt.axes([0.25, 0.25, 0.65, 0.03])
-
-# slider_x = Slider(ax_x, 'X', -125, 125, valinit=0, valstep=1)
-# slider_y = Slider(ax_y, 'Y', -200, 200, valinit=0, valstep=1)
-# slider_z = Slider(ax_z, 'Z', -50, 50, valinit=0, valstep=1)
-# slider_rx = Slider(ax_rx, 'Rx', -45, 45, valinit=0, valstep=1)
-# slider_ry = Slider(ax_ry, 'Ry', -45, 45, valinit=0, valstep=1)
-
-
-# # Initialise the dots
-# dot0 = ax.scatter([0], [0], [0], color='g', marker='X')
-# dot1 = ax.scatter([0], [0], [0], color='b', marker='s')
-# dot2 = ax.scatter([0], [0], [0], color='b', marker='s')
-# dot3 = ax.scatter([0], [0], [0], color='b', marker='o')
-# dot4 = ax.scatter([0], [0], [0], color='b', marker='s')
-# dot5 = ax.scatter([0], [0], [0], color='b', marker='o')
-# dot6 = ax.scatter([0], [0], [0], color='b', marker='.')
-# dotTP = ax.scatter([0], [0], [0], color='r', marker='.')
-
-# # Initialise the surface
-# X = np.arange(0, 1, 0.1)
-# Y = np.arange(0, 1, 0.1)
-# X, Y = np.meshgrid(X, Y)
-# Z = np.zeros_like(X)
-# surf = ax.plot_surface(X, Y, Z, visible=False)
-
-
-# def update(X=0,Y=0,Z=0,Rx=0,Ry=0,TPx=0,TPy=100):
-
-#     # Get values from sliders
-#     X = slider_x.val
-#     Y = slider_y.val
-#     Z = slider_z.val
-#     Rx = slider_rx.val
-#     Ry = slider_ry.val
-
-#     # Get the transformation matrix
-#     T01,T02,T03,T04,T05,T06 = get_transformation(X,Y,Z,Rx,Ry)
-#     T0TP = get_transformation_TP(X,Y,Z,Rx,Ry,TPx,TPy)
-
-#     # Set the position of dots
-#     dot1._offsets3d = ([T01[0][3]],[T01[1][3]],[T01[2][3]])
-#     dot2._offsets3d = ([T02[0][3]],[T02[1][3]],[T02[2][3]])
-#     dot3._offsets3d = ([T03[0][3]],[T03[1][3]],[T03[2][3]])
-#     dot4._offsets3d = ([T04[0][3]],[T04[1][3]],[T04[2][3]])
-#     dot5._offsets3d = ([T05[0][3]],[T05[1][3]],[T05[2][3]])
-#     dot6._offsets3d = ([T06[0][3]],[T06[1][3]],[T06[2][3]])
-#     dotTP._offsets3d = ([T0TP[0][3]],[T0TP[1][3]],[T0TP[2][3]])
-
-#     # Set the position of the plane
-#     TS = get_target_plane(X,Y,Z,Rx,Ry)
-#     print(TS)
-
-#     # Remove the previous plane and plot the new one
-#     global surf
-#     surf.remove()
-#     surf = ax.plot_surface(TS[:,:,0], TS[:,:,1], TS[:,:,2], color='r', alpha=0.2)
-    
-#     fig.canvas.draw_idle()
-
-#     return
-
 
 # # Call the update function when sliders are changed
 # update() # Initialise the plot
 # slider_x.on_changed(update)
 # slider_y.on_changed(update)
-# slider_z.on_changed(update)
-# slider_rx.on_changed(update)
-# slider_ry.on_changed(update)
+# ax_setpointTB.on_submit(update)
 
-# plt.show()
+
+## DEMO ##
+
+line = 0
+for i in range(-115,125,10):
+    if line % 2 == 0:
+        for j in range(115,-125,-10):
+            update(setpoint='0, 450, 0, 30, 30', TPx=j, TPy=i, demo=True)
+            plt.pause(.1)
+    else:
+        for j in range(-115,125,10):
+            update(setpoint='0, 450, 0, 30, 30', TPx=j, TPy=i, demo=True)
+            plt.pause(.1)
+    line += 1
+
+
+plt.show()
+
