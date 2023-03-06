@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, TextBox, Button
 
 from scipy.spatial.transform import Rotation
+from scipy.optimize import fsolve
 
 
 class Ball:
@@ -77,15 +78,15 @@ plt.axhline(y=12.5, color='black', linewidth=0.5)
 ax.set_aspect('equal', adjustable='box')
 ax.grid()
 
-ax_x = plt.axes([0.2, 0.05, 0.65, 0.03])
+ax_cx = plt.axes([0.2, 0.05, 0.65, 0.03])
 ax_t = plt.axes([0.2, 0.1, 0.65, 0.03])
 
-slider_x = Slider(ax_x, 'x', -8, 8, valinit=0, valstep=0.2)
+slider_cx = Slider(ax_cx, 'cx', 0, 150, valinit=100, valstep=0.2)
 slider_t = Slider(ax_t, 'theta', -2, 2, valinit=0, valstep=0.1)
 
 fixed_ball = Ball((0, 0), 25, 'black')
 moving_ball = Ball((150, 0), 25)
-slope = Line((100, 5), 50, 37.5)
+# slope = Line((100, 5), 50, 37.5)
 
 
 # move slope so that it is tangent to the circle
@@ -93,32 +94,45 @@ slope = Line((100, 5), 50, 37.5)
 
 
 
-
+last_cx = 100
+last_t = 0
 def update(val=None):
-    x = slider_x.val
+
+    cx = slider_cx.val
     t = slider_t.val
-    print(x,t)
-    moving_ball.moveX(150+x)
-    slope.rotate(t)
+
+    if cx == last_cx:
+        moved_cx = False
+        moved_t = True
+    elif t == last_t:
+        moved_cx = True
+        moved_t = False
+    
+    last_cx = cx
+    last_t = t
+
+    if moved_cx:
+        print('cx moved')
+
+    moving_ball.moveX(cx)
+
+
     fig.canvas.draw_idle()
 
 update() # Initialise the plot
-slider_x.on_changed(update)
+slider_cx.on_changed(update)
 slider_t.on_changed(update)
 
 
 
 
-
-import numpy as np
-from scipy.optimize import fsolve
-
+"""
 # cx = 150
 cy = 0
 r = 12.5
-lx = 100
-ly = 5
-phi = 37.5
+lx = 81.5
+ly = -5
+phi = 60
 # theta = 0
 
 phi = np.deg2rad(phi)
@@ -140,9 +154,8 @@ print(x, y, lamb, cx, np.rad2deg(theta))
 ax.scatter(x, y, s=3, color='red')
 
 moving_ball.moveX(cx)
-slope.l0 = lx
+slope = Line((lx, ly), 100, np.rad2deg(phi))
 slope.rotate(np.rad2deg(theta))
 
-
-
 plt.show()
+"""
