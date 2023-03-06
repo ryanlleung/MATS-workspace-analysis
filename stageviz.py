@@ -76,6 +76,8 @@ def update(setpoint='0, 450, 0, 0, 0', TPx=0, TPy=0, demo=False):
         setpoint = np.array([float(x) for x in ax_setpointTB.text.split(',')])
     else:
         ax_setpointTB.set_val(setpoint)
+        slider_x.set_val(TPx)
+        slider_y.set_val(TPy)
         setpoint = np.array([float(x) for x in setpoint.split(',')])
 
     # Get the transformation matrix
@@ -107,7 +109,7 @@ def update(setpoint='0, 450, 0, 0, 0', TPx=0, TPy=0, demo=False):
     surf.remove()
     surf = ax.plot_surface(TS[:,:,0], TS[:,:,1], TS[:,:,2], color='r', alpha=0.2)
 
-    desc = f"X: {stage_pos[0]:.1f}, Y: {stage_pos[1]:.1f}, Z: {stage_pos[2]:.1f}, Rx: {stage_pos[3]:.1f}, Ry: {stage_pos[4]:.1f}"
+    desc = f"X: {stage_pos[0]:.2f}, Y: {stage_pos[1]:.2f}, Z: {stage_pos[2]:.2f}, Rx: {stage_pos[3]:.2f}, Ry: {stage_pos[4]:.2f}"
     ax_stageTB.set_val(desc)
 
     fig.canvas.draw_idle()
@@ -127,7 +129,7 @@ reset_button = Button(reset_button_ax, 'Reset')
 reset_button.on_clicked(reset)
 
 
-# # Call the update function when sliders are changed
+# Call the update function when sliders are changed
 # update() # Initialise the plot
 # slider_x.on_changed(update)
 # slider_y.on_changed(update)
@@ -140,11 +142,11 @@ line = 0
 for i in range(-115,125,10):
     if line % 2 == 0:
         for j in range(115,-125,-10):
-            update(setpoint='0, 450, 0, 30, 30', TPx=j, TPy=i, demo=True)
+            update(setpoint='0, 450, 0, 0, 45', TPx=j, TPy=i, demo=True)
             plt.pause(.1)
     else:
         for j in range(-115,125,10):
-            update(setpoint='0, 450, 0, 30, 30', TPx=j, TPy=i, demo=True)
+            update(setpoint='0, 450, 0, 0, 45', TPx=j, TPy=i, demo=True)
             plt.pause(.1)
     line += 1
 

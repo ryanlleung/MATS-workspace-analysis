@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial.transform import Rotation
 
 
-## Geometries are Z-up, this program is not used ##
+## Change to Y-up ##
 
 # Class to plot a 3D linear stage
 class LinearStage:
@@ -262,25 +262,31 @@ def plot_cuboid(ax, l, w, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
         color = f"C{color}"
 
     vertices = np.array([
-        [-l/2, -w/2, 0],
-        [-l/2, w/2, 0],
-        [l/2, w/2, 0],
-        [l/2, -w/2, 0],
-        [-l/2, -w/2, h],
-        [-l/2, w/2, h],
-        [l/2, w/2, h],
-        [l/2, -w/2, h]
+        [-l/2, 0, -w/2],
+        [-l/2, 0, w/2],
+        [l/2, 0, w/2],
+        [l/2, 0, -w/2],
+        [-l/2, h, -w/2],
+        [-l/2, h, w/2],
+        [l/2, h, w/2],
+        [l/2, h, -w/2]
     ])
 
     # Define the rotation matrix based on the rx, ry, rz angles
     rx = np.radians(rx)
     ry = np.radians(ry)
     rz = np.radians(rz)
+    ryz = np.array([
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0]
+    ])
     rotation_matrix = np.array([
         [np.cos(ry)*np.cos(rz), -np.cos(ry)*np.sin(rz), np.sin(ry)],
         [np.sin(rx)*np.sin(ry)*np.cos(rz) + np.cos(rx)*np.sin(rz), -np.sin(rx)*np.sin(ry)*np.sin(rz) + np.cos(rx)*np.cos(rz), -np.sin(rx)*np.cos(ry)],
         [-np.cos(rx)*np.sin(ry)*np.cos(rz) + np.sin(rx)*np.sin(rz), np.cos(rx)*np.sin(ry)*np.sin(rz) + np.sin(rx)*np.cos(rz), np.cos(rx)*np.cos(ry)]
     ])
+    rotation_matrix = np.dot(ryz, rotation_matrix)
 
     # Rotate the vertices and translate to the desired position
     vertices = np.dot(vertices, rotation_matrix) + np.array([cx, cy, cz])
@@ -329,11 +335,17 @@ def plot_cylinder(ax, r, h, pose=[0,0,0,0,0,0], color=0, alpha=0.25):
     rx = np.radians(rx)
     ry = np.radians(ry)
     rz = np.radians(rz)
+    ryz = np.array([
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0]
+    ])
     rotation_matrix = np.array([
         [np.cos(ry)*np.cos(rz), -np.cos(ry)*np.sin(rz), np.sin(ry)],
         [np.sin(rx)*np.sin(ry)*np.cos(rz) + np.cos(rx)*np.sin(rz), -np.sin(rx)*np.sin(ry)*np.sin(rz) + np.cos(rx)*np.cos(rz), -np.sin(rx)*np.cos(ry)],
         [-np.cos(rx)*np.sin(ry)*np.cos(rz) + np.sin(rx)*np.sin(rz), np.cos(rx)*np.sin(ry)*np.sin(rz) + np.sin(rx)*np.cos(rz), np.cos(rx)*np.cos(ry)]
     ])
+    rotation_matrix = np.dot(ryz, rotation_matrix)
 
     # Rotate the vertices and translate to the desired position
     side_vertices = np.dot(side_vertices, rotation_matrix) + np.array([cx, cy, cz])
@@ -377,8 +389,8 @@ if __name__ == '__main__':
 
     # Set the limits of the plot
     xlim = np.array([-250, 250])
-    ylim = np.array([-50, 50])
-    zlim = np.array([0, 100])
+    ylim = np.array([0, 100])
+    zlim = np.array([-50, 50])
 
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
@@ -397,25 +409,26 @@ if __name__ == '__main__':
     ax.set_zlabel('Z')
 
 
-    # plot_cuboid(ax, 300, 75, 50, [0, 0, 0, 0, 0, 0], color=0)
-    # plot_cylinder(ax, 25, 25, [0, 0, 50, 0, 45, 0], color=0)
+    plot_cuboid(ax, 300, 75, 50, [0, 0, 0, 0, 0, 0], color=0)
+    plot_cylinder(ax, 25, 100, [0, 75, 0, 30, 0, 0], color=0)
 
-    X_stage = LinearStage(ax, dims=[400,50,30], color=0)
-    X_stage.plot()
 
-    Rx_stage = RotaryStage(ax, dims=[50,50,30], color=1)
-    Rx_stage.plot()
+    # X_stage = LinearStage(ax, dims=[400,50,30], color=0)
+    # X_stage.plot()
+
+    # Rx_stage = RotaryStage(ax, dims=[50,50,30], color=1)
+    # Rx_stage.plot()
+
+    # # for i in range(-150,150,10):
+    # #     print(i)
+    # #     X_stage.movePlatform(i)
+    # #     plt.pause(.1)
 
     # for i in range(-150,150,10):
     #     print(i)
-    #     X_stage.movePlatform(i)
+    #     X_stage.moveBase([i,0,0,0,0,0])
+    #     Rx_stage.moveBase([i,0,30,0,0,0])
     #     plt.pause(.1)
-
-    for i in range(-150,150,10):
-        print(i)
-        X_stage.moveBase([i,0,0,0,0,0])
-        Rx_stage.moveBase([i,0,30,0,0,0])
-        plt.pause(.1)
 
     plt.show()
 
